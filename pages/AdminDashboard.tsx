@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProperties } from '../context/PropertyContext';
+import { useAuth } from '../context/AuthContext';
 import { Broker } from '../types';
 
 const AdminDashboard: React.FC = () => {
-  const { properties, brokers, deleteProperty, toggleStatus, toggleRecommended, addBroker, updateBroker, deleteBroker } = useProperties();
+  const { properties, brokers, loading, error, deleteProperty, toggleStatus, toggleRecommended, addBroker, updateBroker, deleteBroker } = useProperties();
+  const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'active' | 'archived' | 'brokers'>('active');
   const navigate = useNavigate();
+
+  // Loading states for actions
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   // Broker Modal State
   const [isBrokerModalOpen, setIsBrokerModalOpen] = useState(false);
@@ -18,15 +23,45 @@ const AdminDashboard: React.FC = () => {
     email: '',
     image: ''
   });
+  const [brokerSaving, setBrokerSaving] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAdmin');
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Сигурни ли сте, че искате да изтриете този имот?')) {
-      deleteProperty(id);
+      try {
+        setActionLoading(id);
+        await deleteProperty(id);
+      } catch (err) {
+        alert('Грешка при изтриване на имот');
+      } finally {
+        setActionLoading(null);
+      }
+    }
+  };
+
+  const handleToggleStatus = async (id: number) => {
+    try {
+      setActionLoading(id);
+      await toggleStatus(id);
+    } catch (err) {
+      alert('Грешка при промяна на статуса');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleRecommended = async (id: number) => {
+    try {
+      setActionLoading(id);
+      await toggleRecommended(id);
+    } catch (err) {
+      alert('Грешка при промяна на препоръчан статус');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -48,37 +83,82 @@ const AdminDashboard: React.FC = () => {
     setIsBrokerModalOpen(true);
   };
 
-  const handleDeleteBroker = (id: number) => {
+  const handleDeleteBroker = async (id: number) => {
     if (window.confirm('Сигурни ли сте, че искате да изтриете този брокер?')) {
-      deleteBroker(id);
+      try {
+        setActionLoading(id);
+        await deleteBroker(id);
+      } catch (err) {
+        alert('Грешка при изтриване на брокер');
+      } finally {
+        setActionLoading(null);
+      }
     }
   };
 
-  const handleBrokerSubmit = (e: React.FormEvent) => {
+  const handleBrokerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingBroker) {
-      updateBroker(editingBroker.id, brokerForm);
-    } else {
-      addBroker({
-        ...brokerForm,
-        image: brokerForm.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDlnebd8O-PEelo_8CuP6G5HUJyRRDh8FLHmb04BZP4jziabyltYtSkTLjQe_evYQTwguFG3T4Y5weVAssjmPBO_0cTqHx2Wi4p27edOgo1ycopkCf4x2Wvq72utXwmi_Hwbvqjt1soX79ToyndVKg8ElLrhFdkbRyXG1dNGVyAHqECBauIb7aUXSoyHalEGIhQhwrBIUlj__6borFKMS94mlvmQK8rWUzFZq-XJdbgb1uzw4UfUK2--xg3gEmgDhtvzuYpPNfv9A' // fallback image
-      });
+    setBrokerSaving(true);
+    
+    try {
+      if (editingBroker) {
+        await updateBroker(editingBroker.id, brokerForm);
+      } else {
+        await addBroker({
+          ...brokerForm,
+          image: brokerForm.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDlnebd8O-PEelo_8CuP6G5HUJyRRDh8FLHmb04BZP4jziabyltYtSkTLjQe_evYQTwguFG3T4Y5weVAssjmPBO_0cTqHx2Wi4p27edOgo1ycopkCf4x2Wvq72utXwmi_Hwbvqjt1soX79ToyndVKg8ElLrhFdkbRyXG1dNGVyAHqECBauIb7aUXSoyHalEGIhQhwrBIUlj__6borFKMS94mlvmQK8rWUzFZq-XJdbgb1uzw4UfUK2--xg3gEmgDhtvzuYpPNfv9A'
+        });
+      }
+      setIsBrokerModalOpen(false);
+    } catch (err) {
+      alert('Грешка при запазване на брокер');
+    } finally {
+      setBrokerSaving(false);
     }
-    setIsBrokerModalOpen(false);
   };
 
   // Filter properties based on active tab
   const displayedProperties = properties.filter(p => activeTab === 'active' ? p.status === 'active' : p.status === 'archived');
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex flex-1 min-h-screen bg-[#f6f8f6] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-gray-500">Зареждане на данни...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-1 min-h-screen bg-[#f6f8f6] items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center px-4">
+          <span className="material-symbols-outlined text-5xl text-red-400">error</span>
+          <p className="text-red-600 font-bold">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover"
+          >
+            Опитай отново
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 min-h-screen bg-[#f6f8f6]">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 py-8 px-4 border-r border-[#e7f3eb] bg-white sticky top-0 h-screen">
         <div className="flex items-center gap-2 px-2 mb-10">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <span className="material-symbols-outlined text-xl">real_estate_agent</span>
-          </div>
-          <span className="font-bold text-lg text-[#0d1b12]">Админ Панел</span>
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/logo.png" alt="Имоти Христов" className="h-9 w-auto object-contain" />
+            <span className="font-bold text-lg text-[#0d1b12]">Админ Панел</span>
+          </Link>
         </div>
 
         <nav className="space-y-1 flex-1">
@@ -217,9 +297,14 @@ const AdminDashboard: React.FC = () => {
                       </button>
                       <button 
                         onClick={() => handleDeleteBroker(broker.id)}
-                        className="p-2 rounded-lg border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
+                        disabled={actionLoading === broker.id}
+                        className="p-2 rounded-lg border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors disabled:opacity-50"
                       >
-                         <span className="material-symbols-outlined text-xl">delete</span>
+                         {actionLoading === broker.id ? (
+                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-500"></div>
+                         ) : (
+                           <span className="material-symbols-outlined text-xl">delete</span>
+                         )}
                       </button>
                    </div>
                 </div>
@@ -278,18 +363,20 @@ const AdminDashboard: React.FC = () => {
                                 <div className="flex items-center justify-end gap-2">
                                    {/* Toggle Recommended Button */}
                                    <button 
-                                     onClick={() => toggleRecommended(prop.id)}
+                                     onClick={() => handleToggleRecommended(prop.id)}
+                                     disabled={actionLoading === prop.id}
                                      title={prop.isRecommended ? "Премахни от препоръчани" : "Добави в препоръчани"}
-                                     className={`size-8 rounded-full flex items-center justify-center transition-colors ${prop.isRecommended ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' : 'hover:bg-yellow-50 text-gray-300 hover:text-yellow-500'}`}
+                                     className={`size-8 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 ${prop.isRecommended ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' : 'hover:bg-yellow-50 text-gray-300 hover:text-yellow-500'}`}
                                    >
                                       <span className={`material-symbols-outlined text-[20px] ${prop.isRecommended ? 'filled' : ''}`}>star</span>
                                    </button>
 
                                    {/* Archive/Activate Button */}
                                    <button 
-                                     onClick={() => toggleStatus(prop.id)}
+                                     onClick={() => handleToggleStatus(prop.id)}
+                                     disabled={actionLoading === prop.id}
                                      title={activeTab === 'active' ? "Архивирай" : "Активирай"}
-                                     className={`size-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors ${activeTab === 'active' ? 'text-gray-400 hover:text-gray-600' : 'text-green-500 hover:bg-green-50'}`}
+                                     className={`size-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors disabled:opacity-50 ${activeTab === 'active' ? 'text-gray-400 hover:text-gray-600' : 'text-green-500 hover:bg-green-50'}`}
                                    >
                                       <span className="material-symbols-outlined text-[20px]">{activeTab === 'active' ? 'archive' : 'unarchive'}</span>
                                    </button>
@@ -304,10 +391,15 @@ const AdminDashboard: React.FC = () => {
                                    
                                    <button 
                                      onClick={() => handleDelete(prop.id)}
+                                     disabled={actionLoading === prop.id}
                                      title="Изтрий" 
-                                     className="size-8 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors"
+                                     className="size-8 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 flex items-center justify-center transition-colors disabled:opacity-50"
                                    >
-                                     <span className="material-symbols-outlined text-[20px]">delete</span>
+                                     {actionLoading === prop.id ? (
+                                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                                     ) : (
+                                       <span className="material-symbols-outlined text-[20px]">delete</span>
+                                     )}
                                    </button>
                                 </div>
                              </td>
@@ -350,6 +442,7 @@ const AdminDashboard: React.FC = () => {
                       onChange={(e) => setBrokerForm({...brokerForm, name: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                       placeholder="Иван Иванов"
+                      disabled={brokerSaving}
                     />
                  </div>
                  <div>
@@ -361,6 +454,7 @@ const AdminDashboard: React.FC = () => {
                       onChange={(e) => setBrokerForm({...brokerForm, role: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                       placeholder="Старши Брокер"
+                      disabled={brokerSaving}
                     />
                  </div>
                  <div className="grid grid-cols-2 gap-4">
@@ -373,6 +467,7 @@ const AdminDashboard: React.FC = () => {
                         onChange={(e) => setBrokerForm({...brokerForm, phone: e.target.value})}
                         className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                         placeholder="+359..."
+                        disabled={brokerSaving}
                       />
                     </div>
                     <div>
@@ -384,6 +479,7 @@ const AdminDashboard: React.FC = () => {
                         onChange={(e) => setBrokerForm({...brokerForm, email: e.target.value})}
                         className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                         placeholder="email@example.com"
+                        disabled={brokerSaving}
                       />
                     </div>
                  </div>
@@ -395,6 +491,7 @@ const AdminDashboard: React.FC = () => {
                       onChange={(e) => setBrokerForm({...brokerForm, image: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                       placeholder="https://..."
+                      disabled={brokerSaving}
                     />
                     <p className="text-xs text-gray-400 mt-1">Оставете празно за снимка по подразбиране.</p>
                  </div>
@@ -403,14 +500,23 @@ const AdminDashboard: React.FC = () => {
                       type="button" 
                       onClick={() => setIsBrokerModalOpen(false)}
                       className="px-4 py-2 text-gray-600 font-bold hover:bg-gray-50 rounded-lg"
+                      disabled={brokerSaving}
                     >
                        Отказ
                     </button>
                     <button 
                       type="submit" 
-                      className="px-6 py-2 bg-primary text-[#0d1b12] font-bold rounded-lg hover:bg-primary-hover shadow-lg shadow-green-200"
+                      disabled={brokerSaving}
+                      className="px-6 py-2 bg-primary text-[#0d1b12] font-bold rounded-lg hover:bg-primary-hover shadow-lg shadow-green-200 disabled:opacity-50 flex items-center gap-2"
                     >
-                       {editingBroker ? 'Запази промените' : 'Добави брокер'}
+                       {brokerSaving ? (
+                         <>
+                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#0d1b12]"></div>
+                           <span>Запазване...</span>
+                         </>
+                       ) : (
+                         <span>{editingBroker ? 'Запази промените' : 'Добави брокер'}</span>
+                       )}
                     </button>
                  </div>
               </form>

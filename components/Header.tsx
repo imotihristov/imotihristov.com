@@ -38,13 +38,10 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#e7f3eb] bg-[#f8fcf9]/95 backdrop-blur-md">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-1 sm:px-1 lg:px-1">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-            <span className="material-symbols-outlined text-2xl">real_estate_agent</span>
-          </div>
-          <h2 className="text-text-main text-xl font-bold leading-tight tracking-tight">Имоти Христов</h2>
+          <img src="/logo.png" alt="Имоти Христов" className="h-28 w-auto object-contain" />
         </Link>
 
         {/* Desktop Navigation */}

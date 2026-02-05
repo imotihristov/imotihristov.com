@@ -281,7 +281,7 @@ const Home: React.FC = () => {
            </div>
 
            {/* Search Widget Card */}
-           <div className="bg-white rounded-2xl shadow-2xl max-w-5xl mx-auto p-6 md:p-8 pt-10 relative mt-8">
+           <div className="bg-white rounded-2xl shadow-2xl max-w-5xl mx-auto p-6 md:p-10 pt-10 relative mt-8">
               
               {/* Floating Pill Toggle Switch - Overlapping top edge */}
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-50">
@@ -489,7 +489,7 @@ const Home: React.FC = () => {
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Искате да продадете имот?</h2>
             <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">Ние от "Имоти Христов" ще ви помогнем да намерите правилния купувач на най-добрата цена. Свържете се с нас за безплатна консултация.</p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-               <Link to="/contact" className="px-8 py-3.5 bg-primary hover:bg-primary-hover text-[#0d1b12] font-bold rounded-lg shadow-lg shadow-green-900/20 transition-all">
+               <Link to="/contact" className="px-8 py-3.5 bg-primary hover:bg-primary-hover text-[#ffffff] font-bold rounded-lg shadow-lg shadow-green-900/20 transition-all">
                   Свържете се с нас
                </Link>
                <Link to="/services" className="px-8 py-3.5 bg-transparent border border-white/20 hover:bg-white/10 text-white font-bold rounded-lg transition-all">

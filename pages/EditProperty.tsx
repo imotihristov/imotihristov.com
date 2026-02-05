@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useProperties } from '../context/PropertyContext';
+import { uploadImages } from '../lib/services/storageService';
 
 const propertyCategories = {
   "Жилищни имоти": [
@@ -29,10 +30,16 @@ const bulgarianCities = [
   "Каварна", "Созопол", "Приморско", "Царево"
 ];
 
+interface ImagePreview {
+  url: string;
+  file?: File;
+  isExisting: boolean;
+}
+
 const EditProperty: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getProperty, updateProperty, brokers } = useProperties();
+  const { getProperty, updateProperty, brokers, loading } = useProperties();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -50,39 +57,52 @@ const EditProperty: React.FC = () => {
     neighborhood: '',
     street: '',
     features: [] as string[],
-    image: '',
-    images: [] as string[],
     brokerId: ''
   });
 
+  const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [notFound, setNotFound] = useState(false);
+
   useEffect(() => {
-    const property = getProperty(Number(id));
-    if (property) {
-      setFormData({
-        title: property.title,
-        description: property.description,
-        price: property.price,
-        currency: property.currency,
-        dealType: property.type === 'rent' ? 'rent' : 'sale',
-        category: property.category,
-        area: property.area,
-        beds: property.beds || 0,
-        rooms: property.rooms || 0,
-        floor: property.floor || '',
-        constructionType: property.constructionType || '',
-        city: property.city,
-        neighborhood: property.neighborhood || '',
-        street: '', // Address details are usually not stored separately in the simple context, so we leave it blank or could try to parse
-        features: property.features,
-        image: property.image,
-        images: property.images && property.images.length > 0 ? property.images : [property.image],
-        brokerId: property.brokerId ? property.brokerId.toString() : ''
-      });
-    } else {
-        // Redirect if not found
-        navigate('/admin');
+    if (!loading) {
+      const property = getProperty(Number(id));
+      if (property) {
+        setFormData({
+          title: property.title,
+          description: property.description,
+          price: property.price,
+          currency: property.currency,
+          dealType: property.type === 'rent' ? 'rent' : 'sale',
+          category: property.category,
+          area: property.area,
+          beds: property.beds || 0,
+          rooms: property.rooms || 0,
+          floor: property.floor || '',
+          constructionType: property.constructionType || '',
+          city: property.city,
+          neighborhood: property.neighborhood || '',
+          street: '',
+          features: property.features,
+          brokerId: property.brokerId ? property.brokerId.toString() : ''
+        });
+
+        // Set existing images
+        const existingImages = property.images && property.images.length > 0 
+          ? property.images 
+          : [property.image];
+        
+        setImagePreviews(existingImages.map(url => ({
+          url,
+          isExisting: true
+        })));
+      } else {
+        setNotFound(true);
+      }
     }
-  }, [id, getProperty, navigate]);
+  }, [id, getProperty, loading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
@@ -100,52 +120,123 @@ const EditProperty: React.FC = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newImages = Array.from(e.target.files).map(file => URL.createObjectURL(file as Blob));
-      setFormData(prev => ({ 
-        ...prev, 
-        images: [...prev.images, ...newImages] 
+      const newFiles = Array.from(e.target.files);
+      const newPreviews = newFiles.map(file => ({
+        url: URL.createObjectURL(file),
+        file: file,
+        isExisting: false
       }));
+      
+      setImagePreviews(prev => [...prev, ...newPreviews]);
+      setPendingFiles(prev => [...prev, ...newFiles]);
     }
   };
 
   const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
+    const preview = imagePreviews[index];
+    
+    // Revoke the object URL to avoid memory leaks (only for new uploads)
+    if (preview.file) {
+      URL.revokeObjectURL(preview.url);
+      // Remove from pending files
+      setPendingFiles(prev => prev.filter(f => f !== preview.file));
+    }
+    
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.title || !formData.price || !formData.category) {
       alert("Моля попълнете задължителните полета!");
       return;
     }
 
-    const mainImage = formData.images.length > 0 ? formData.images[0] : formData.image;
+    setIsSubmitting(true);
+    
+    try {
+      // Get existing image URLs (that weren't removed)
+      const existingImageUrls = imagePreviews
+        .filter(p => p.isExisting)
+        .map(p => p.url);
 
-    updateProperty(Number(id), {
-      title: formData.title,
-      description: formData.description,
-      location: `${formData.neighborhood ? formData.neighborhood + ', ' : ''}${formData.city}`,
-      city: formData.city,
-      neighborhood: formData.neighborhood,
-      price: Number(formData.price),
-      currency: formData.currency,
-      area: Number(formData.area),
-      beds: Number(formData.beds),
-      rooms: Number(formData.rooms),
-      floor: formData.floor,
-      type: formData.dealType === 'rent' ? 'rent' : 'sale',
-      category: formData.category,
-      constructionType: formData.constructionType,
-      image: mainImage,
-      images: formData.images,
-      features: formData.features,
-      brokerId: formData.brokerId ? Number(formData.brokerId) : undefined
-    });
-    navigate('/admin');
+      let uploadedImageUrls: string[] = [];
+      
+      // Upload new images to Supabase Storage if there are any
+      if (pendingFiles.length > 0) {
+        setUploadProgress('Качване на снимки...');
+        try {
+          uploadedImageUrls = await uploadImages(pendingFiles);
+        } catch (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          // Continue without new images if upload fails
+        }
+      }
+
+      // Combine existing and new images
+      const allImages = [...existingImageUrls, ...uploadedImageUrls];
+      const mainImage = allImages.length > 0 ? allImages[0] : imagePreviews[0]?.url || '';
+
+      setUploadProgress('Запазване на промените...');
+      
+      await updateProperty(Number(id), {
+        title: formData.title,
+        description: formData.description,
+        location: `${formData.neighborhood ? formData.neighborhood + ', ' : ''}${formData.city}`,
+        city: formData.city,
+        neighborhood: formData.neighborhood,
+        price: Number(formData.price),
+        currency: formData.currency,
+        area: Number(formData.area),
+        beds: Number(formData.beds),
+        rooms: Number(formData.rooms),
+        floor: formData.floor,
+        type: formData.dealType === 'rent' ? 'rent' : 'sale',
+        category: formData.category,
+        constructionType: formData.constructionType,
+        image: mainImage,
+        images: allImages,
+        features: formData.features,
+        brokerId: formData.brokerId ? Number(formData.brokerId) : undefined
+      });
+
+      navigate('/admin');
+    } catch (error) {
+      console.error('Error updating property:', error);
+      alert('Грешка при редактиране на имота. Моля, опитайте отново.');
+    } finally {
+      setIsSubmitting(false);
+      setUploadProgress('');
+    }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full bg-[#f6f8f6] min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-gray-500">Зареждане...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (notFound) {
+    return (
+      <div className="w-full bg-[#f6f8f6] min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="material-symbols-outlined text-5xl text-gray-300">search_off</span>
+          <p className="text-gray-600 font-bold">Имотът не е намерен</p>
+          <Link to="/admin" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover">
+            Обратно към панела
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Helper to determine field visibility
   const showBedrooms = [
@@ -192,22 +283,22 @@ const EditProperty: React.FC = () => {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="col-span-1 md:col-span-2">
                      <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="title">Заглавие на обявата *</label>
-                     <input id="title" value={formData.title} onChange={handleChange} type="text" placeholder="Напр. Просторен тристаен апартамент в Лозенец" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" required />
+                     <input id="title" value={formData.title} onChange={handleChange} type="text" placeholder="Напр. Просторен тристаен апартамент в Лозенец" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" required disabled={isSubmitting} />
                   </div>
                   <div className="col-span-1 md:col-span-2">
                      <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="description">Подробно описание *</label>
-                     <textarea id="description" value={formData.description} onChange={handleChange} placeholder="Опишете предимствата на имота, състоянието, обзавеждането и др." className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-y min-h-[150px]" required></textarea>
+                     <textarea id="description" value={formData.description} onChange={handleChange} placeholder="Опишете предимствата на имота, състоянието, обзавеждането и др." className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-y min-h-[150px]" required disabled={isSubmitting}></textarea>
                   </div>
                   <div>
                      <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="price">Цена (€) *</label>
                      <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">€</span>
-                        <input id="price" value={formData.price} onChange={handleChange} type="number" placeholder="0.00" className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" required />
+                        <input id="price" value={formData.price} onChange={handleChange} type="number" placeholder="0.00" className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" required disabled={isSubmitting} />
                      </div>
                   </div>
                   <div>
                      <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="dealType">Тип сделка</label>
-                     <select id="dealType" value={formData.dealType} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                     <select id="dealType" value={formData.dealType} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" disabled={isSubmitting}>
                         <option value="sale">Продажба</option>
                         <option value="rent">Наем</option>
                      </select>
@@ -230,6 +321,7 @@ const EditProperty: React.FC = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                     required
+                    disabled={isSubmitting}
                  >
                     <option value="">Изберете тип имот...</option>
                     {Object.entries(propertyCategories).map(([category, types]) => (
@@ -245,34 +337,34 @@ const EditProperty: React.FC = () => {
                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   <div>
                      <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="area">Площ (кв.м) *</label>
-                     <input id="area" value={formData.area} onChange={handleChange} type="number" placeholder="0" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" required />
+                     <input id="area" value={formData.area} onChange={handleChange} type="number" placeholder="0" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" required disabled={isSubmitting} />
                   </div>
                   
                   {showBedrooms && (
                     <div>
                        <label className="block text-sm font-bold text-gray-700 mb-2">Брой спални</label>
-                       <input id="beds" value={formData.beds} onChange={handleChange} type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" min="0" />
+                       <input id="beds" value={formData.beds} onChange={handleChange} type="number" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" min="0" disabled={isSubmitting} />
                     </div>
                   )}
 
                   {showRooms && (
                     <div>
                        <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="rooms">Общо стаи</label>
-                       <input id="rooms" value={formData.rooms} onChange={handleChange} type="number" placeholder="0" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" />
+                       <input id="rooms" value={formData.rooms} onChange={handleChange} type="number" placeholder="0" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" disabled={isSubmitting} />
                     </div>
                   )}
 
                   {showFloor && (
                     <div>
                        <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="floor">Етаж</label>
-                       <input id="floor" value={formData.floor} onChange={handleChange} type="text" placeholder="напр. 3 от 6" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" />
+                       <input id="floor" value={formData.floor} onChange={handleChange} type="text" placeholder="напр. 3 от 6" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" disabled={isSubmitting} />
                     </div>
                   )}
 
                   {showConstruction && (
                     <div>
                        <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="constructionType">Тип строителство</label>
-                       <select id="constructionType" value={formData.constructionType} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                       <select id="constructionType" value={formData.constructionType} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" disabled={isSubmitting}>
                           <option value="">Изберете...</option>
                           <option value="Тухла">Тухла</option>
                           <option value="Панел">Панел</option>
@@ -302,6 +394,7 @@ const EditProperty: React.FC = () => {
                         type="text" 
                         placeholder="Изберете или въведете град..." 
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" 
+                        disabled={isSubmitting}
                      />
                      <datalist id="cities-list">
                        {bulgarianCities.map(city => <option key={city} value={city} />)}
@@ -309,11 +402,11 @@ const EditProperty: React.FC = () => {
                   </div>
                   <div>
                      <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="neighborhood">Квартал</label>
-                     <input id="neighborhood" value={formData.neighborhood} onChange={handleChange} type="text" placeholder="Напр. Лозенец" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" />
+                     <input id="neighborhood" value={formData.neighborhood} onChange={handleChange} type="text" placeholder="Напр. Лозенец" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" disabled={isSubmitting} />
                   </div>
                   <div>
                      <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="street">Улица и номер</label>
-                     <input id="street" value={formData.street} onChange={handleChange} type="text" placeholder="Напр. ул. Златовръх 15" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" />
+                     <input id="street" value={formData.street} onChange={handleChange} type="text" placeholder="Напр. ул. Златовръх 15" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" disabled={isSubmitting} />
                   </div>
                   
                   {/* Map Visualization Placeholder */}
@@ -340,6 +433,7 @@ const EditProperty: React.FC = () => {
                          checked={formData.features.includes(am)}
                          onChange={() => handleCheckboxChange(am)}
                          className="rounded text-primary focus:ring-primary border-gray-300 w-5 h-5" 
+                         disabled={isSubmitting}
                        />
                        <span className="text-sm text-gray-700 group-hover:text-primary transition-colors">{am}</span>
                     </label>
@@ -354,13 +448,14 @@ const EditProperty: React.FC = () => {
                   <h2 className="text-xl font-bold text-[#0d1b12]">Снимки</h2>
                </div>
 
-               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:bg-white transition-colors cursor-pointer relative group">
+               <div className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:bg-white transition-colors cursor-pointer relative group ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}>
                     <input 
                         type="file" 
                         multiple 
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                         onChange={handleImageUpload} 
                         accept="image/*" 
+                        disabled={isSubmitting}
                     />
                     <div className="flex flex-col items-center pointer-events-none">
                         <div className="size-16 bg-white shadow-sm text-primary rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -374,16 +469,17 @@ const EditProperty: React.FC = () => {
                 </div>
 
                 {/* Image Previews */}
-                {formData.images.length > 0 && (
+                {imagePreviews.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                        {formData.images.map((img, idx) => (
+                        {imagePreviews.map((preview, idx) => (
                             <div key={idx} className="relative aspect-[4/3] rounded-lg overflow-hidden border border-gray-200 group shadow-sm">
-                                <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                                <img src={preview.url} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <button 
                                         type="button"
                                         onClick={() => removeImage(idx)} 
                                         className="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition-transform hover:scale-110"
+                                        disabled={isSubmitting}
                                     >
                                         <span className="material-symbols-outlined text-xl">delete</span>
                                     </button>
@@ -391,6 +487,11 @@ const EditProperty: React.FC = () => {
                                 {idx === 0 && (
                                     <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
                                         Основна
+                                    </div>
+                                )}
+                                {preview.isExisting && (
+                                    <div className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                        Съществуваща
                                     </div>
                                 )}
                             </div>
@@ -412,6 +513,7 @@ const EditProperty: React.FC = () => {
                     value={formData.brokerId} 
                     onChange={handleChange} 
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                    disabled={isSubmitting}
                   >
                     <option value="">-- Изберете брокер --</option>
                     {brokers.map(broker => (
@@ -422,12 +524,28 @@ const EditProperty: React.FC = () => {
             </section>
 
             <div className="flex flex-col md:flex-row items-center justify-end gap-4 pt-4">
+               {uploadProgress && (
+                 <p className="text-gray-500 text-sm">{uploadProgress}</p>
+               )}
                <Link to="/admin" className="px-6 py-3 rounded-lg border border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors">
                  Отказ
                </Link>
-               <button type="submit" className="w-full md:w-auto bg-primary hover:bg-primary-hover text-[#0d1b12] text-lg font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                  <span>Запази промените</span>
-                  <span className="material-symbols-outlined">save</span>
+               <button 
+                 type="submit" 
+                 disabled={isSubmitting}
+                 className="w-full md:w-auto bg-primary hover:bg-primary-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-[#0d1b12] text-lg font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+               >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#0d1b12]"></div>
+                      <span>Запазване...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Запази промените</span>
+                      <span className="material-symbols-outlined">save</span>
+                    </>
+                  )}
                </button>
             </div>
          </form>

@@ -3,23 +3,25 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#f8fcf9] border-t border-[#e7f3eb] pt-16 pb-8">
+    <footer className="bg-[#f8fcf9] border-t border-[#e7f3eb] pt-10 pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-6">
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="text-primary">
-                 <span className="material-symbols-outlined text-3xl">real_estate_agent</span>
-              </div>
-              <h3 className="text-text-main text-lg font-bold">Имоти Христов</h3>
+            <div className="flex items-center">
+              <Link to="/">
+                <img src="/logo.png" alt="Имоти Христов" className="h-28 w-auto object-contain" />
+              </Link>
             </div>
             <p className="text-text-secondary text-sm leading-relaxed mb-6">
               Вашият доверен партньор в света на недвижимите имоти. Професионализъм и коректност от 2010 г.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-text-secondary hover:text-primary transition-colors"><span className="material-symbols-outlined">public</span></a>
-              <a href="#" className="text-text-secondary hover:text-primary transition-colors"><span className="material-symbols-outlined">alternate_email</span></a>
-              <a href="#" className="text-text-secondary hover:text-primary transition-colors"><span className="material-symbols-outlined">rss_feed</span></a>
+              <a href="https://www.facebook.com/imothristov" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white border border-[#e7f3eb] flex items-center justify-center text-text-main hover:bg-[#0866ff] hover:text-white hover:border-[#0866ff] transition-all duration-300 shadow-sm" title="Facebook" aria-label="Facebook">
+                <img src="/facebook.svg" alt="" className="w-8 h-8" />
+              </a>
+              <a href="viber://contact?number=%2B359898910259" className="w-10 h-10 rounded-full bg-white border border-[#e7f3eb] flex items-center justify-center text-text-main hover:bg-[#7360f2] hover:text-white hover:border-[#7360f2] transition-all duration-300 shadow-sm" title="Viber" aria-label="Viber">
+                <img src="/viber.svg" alt="" className="w-8 h-8" />
+              </a>
             </div>
           </div>
           <div>
@@ -50,11 +52,11 @@ const Footer: React.FC = () => {
               </li>
               <li className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary shrink-0">call</span>
-                <span>+359 888 123 456</span>
+                <span>+359898910259</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary shrink-0">mail</span>
-                <span>office@imotihristov.bg</span>
+                <a href="mailto:imotihristov@gmail.com" className="hover:text-primary">imotihristov@gmail.com</a>
               </li>
             </ul>
           </div>

@@ -97,6 +97,15 @@ const SearchResults: React.FC = () => {
 
   // 3. Filter Properties Logic
   const filteredProperties = useMemo(() => {
+    // Check specific search by ID in URL (overrides everything)
+    const idParam = searchParams.get('id');
+    if (idParam) {
+      const searchedProperty = properties.filter(p => 
+        p.status === 'active' && p.id === Number(idParam)
+      );
+      return searchedProperty;
+    }
+
     let result = properties.filter(p => p.status === 'active');
 
     // Filter by Sale/Rent
@@ -134,12 +143,6 @@ const SearchResults: React.FC = () => {
       // Newest (by ID desc)
       result.sort((a, b) => b.id - a.id);
     }
-    
-    // Check specific search by ID in URL (overrides everything)
-    const idParam = searchParams.get('id');
-    if (idParam) {
-      return properties.filter(p => p.id === Number(idParam));
-    }
 
     return result;
   }, [properties, filters, sortBy, searchParams]);
@@ -164,6 +167,10 @@ const SearchResults: React.FC = () => {
     filters.types.length > 0
   );
 
+  // Check if searching by ID
+  const searchById = searchParams.get('id');
+  const isSearchingById = Boolean(searchById);
+
   return (
     <div className="w-full bg-background-light py-6">
       {/* Breadcrumbs */}
@@ -180,7 +187,9 @@ const SearchResults: React.FC = () => {
               </li>
               <li><span className="text-gray-400">/</span></li>
               <li className="inline-flex items-center">
-                <span className="text-text-main font-medium">Резултати</span>
+                <span className="text-text-main font-medium">
+                  {isSearchingById ? `Имот #${searchById}` : 'Резултати'}
+                </span>
               </li>
             </ol>
           </nav>
@@ -339,8 +348,21 @@ const SearchResults: React.FC = () => {
           <div className="flex-1 flex flex-col min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-text-main leading-tight">Резултати от търсенето</h1>
-                <p className="text-text-secondary text-sm mt-1">{filteredProperties.length} имота намерени</p>
+                <h1 className="text-2xl font-bold text-text-main leading-tight">
+                  {isSearchingById ? `Търсене по ID: #${searchById}` : 'Резултати от търсенето'}
+                </h1>
+                <p className="text-text-secondary text-sm mt-1">
+                  {filteredProperties.length} {filteredProperties.length === 1 ? 'имот намерен' : 'имота намерени'}
+                </p>
+                {isSearchingById && filteredProperties.length > 0 && (
+                  <Link 
+                    to="/properties" 
+                    className="text-primary text-sm mt-2 inline-flex items-center gap-1 hover:underline"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+                    Обратно към всички имоти
+                  </Link>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-text-secondary whitespace-nowrap hidden sm:block">Сортирай по:</span>
@@ -370,6 +392,9 @@ const SearchResults: React.FC = () => {
                   </div>
                   <div className="p-4 flex flex-col flex-grow">
                     <div className="mb-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-gray-400">ID: #{property.id}</span>
+                      </div>
                       <h3 className="text-xl font-bold text-primary mb-1">{property.currency === '€' ? `€${property.price.toLocaleString()}` : `${property.currency.split(' ')[0]}${property.price} / месец`}</h3>
                       <h4 className="text-base font-semibold text-text-main line-clamp-1 group-hover:text-primary transition-colors">{property.title}</h4>
                     </div>
@@ -408,10 +433,21 @@ const SearchResults: React.FC = () => {
               {filteredProperties.length === 0 && (
                 <div className="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
                   <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">search_off</span>
-                  <p className="text-gray-500 font-medium">Няма имоти отговарящи на вашите критерии.</p>
-                  <button onClick={clearFilters} className="text-primary hover:underline text-sm font-bold mt-2">
-                    Изчисти филтрите
-                  </button>
+                  <p className="text-gray-500 font-medium">
+                    {isSearchingById 
+                      ? `Имот с ID #${searchById} не е намерен или не е активен.`
+                      : 'Няма имоти отговарящи на вашите критерии.'
+                    }
+                  </p>
+                  {isSearchingById ? (
+                    <Link to="/properties" className="text-primary hover:underline text-sm font-bold mt-2 inline-block">
+                      Виж всички имоти
+                    </Link>
+                  ) : (
+                    <button onClick={clearFilters} className="text-primary hover:underline text-sm font-bold mt-2">
+                      Изчисти филтрите
+                    </button>
+                  )}
                 </div>
               )}
             </div>

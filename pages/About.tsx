@@ -10,9 +10,9 @@ const team: TeamMember[] = [
 ];
 
 const testimonials: Testimonial[] = [
-  { id: 1, text: "Изключително професионално отношение! Екипът на Имоти Христов направи продажбата на апартамента ни лесна и бърза.", author: "Петър Тодоров", location: "София", rating: 5, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDbhwWqPR4nuwHmFSe6xsZgEwEvxgW8XxQKNGnB7W1Oj9zen1Ga8rvrfdo4dSkY2qWAZLBkx3AJnZdBHPjgjMR6iavoDuI3FiC0GWcJZweKZgSn0ZyAxmB1tjHZgIGxlhctl82bfgOSYTmp3GO9iyh750y3g_vo4yxfrj5hLPAOoQ7LOo5CEo6GDSvn6Z0IT7-7suS5ZyjqQBw_kOtz4toqoFZj7L7eB19ORfnsGYM8qbaCr0Yw8XkDu_U8hXQqx9M_7DnLkLuVZd8" },
-  { id: 2, text: "Благодарение на Мария намерихме перфектния дом за нашето семейство. Препоръчвам горещо!", author: "Ани Георгиева", location: "Пловдив", rating: 5, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0SCBhvFQQChl_2q0j1n-_sizBkn22lo4_nv1Wg_Oq6mwC9X5cDRV1YMETSRFkmE8kTQhvBTmRVizAF-SNUVR666D4Y4I1T2COPC3zGKfTSYK2UIgBD4jtRjOO1o9tGoIXAmRImJT-YjUb1mQl2kSoyQhDNOEWjc0jwPCv3uzpChopetdRTypdf0cHeTgleLtsQKDy4cLsdPGXJg_PXVxxHSxI9GYI8VXirP8_g1wPxJ36a3PNAQ-aS1WpNNB4BiJqxFX03tZZTT8" },
-  { id: 3, text: "Коректност и прозрачност. Много съм доволен от консултацията и съдействието при документите.", author: "Димитър Василев", location: "Варна", rating: 4.5, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC-RpswBWCCil8BFBnQiqKO0Gk8tRy0_VNe_on-FwUt8ro9xrhk0zv2Olc719S37u21RukvGbz2QfRfepb1NnZk71heKUIK2ZydSC84ZcvF7RG43reuuRrQw8JgiwMFFNfeZrB1I0cEcvlJGs1TZUK94aLpsS7lV-_DOcOg1TC--oeqoqVcsUCKBU-nrOqcTz7pRJy2A0T2X5ZRDkx6Y7u5mG_g3L_nDJI5SOcFUIl7nwSDxnusKagAonTmu9XG_mnkexbZDEEMeY4" }
+  { id: 1, text: "Изключително професионално отношение! Екипът на Имоти Христов направи продажбата на апартамента ни лесна и бърза.", author: "Петър Тодоров", location: "Шумен", rating: 5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" },
+  { id: 2, text: "Благодарение на Мария намерихме перфектния дом за нашето семейство. Препоръчвам горещо!", author: "Ани Георгиева", location: "Шумен", rating: 5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" },
+  { id: 3, text: "Коректност и прозрачност. Много съм доволен от консултацията и съдействието при документите.", author: "Димитър Василев", location: "Шумен", rating: 4.5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" }
 ];
 
 const About: React.FC = () => {
@@ -34,7 +34,7 @@ const About: React.FC = () => {
               Ние създаваме връзки между хора и домове. История за доверие, професионализъм и споделени мечти, която започва през 2010 година.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/services" className="flex items-center justify-center rounded-lg h-12 px-6 bg-primary text-[#0d1b12] text-base font-bold hover:bg-primary/90 transition-colors">
+              <Link to="/services" className="flex items-center justify-center rounded-lg h-12 px-6 bg-primary text-[#ffffff] text-base font-bold hover:bg-primary/90 transition-colors">
                  Вижте нашите услуги
               </Link>
               <Link to="/contact" className="flex items-center justify-center rounded-lg h-12 px-6 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-base font-medium hover:bg-white/20 transition-colors">
@@ -67,26 +67,25 @@ const About: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-6 mt-4 pt-6 border-t border-[#e7f3eb]">
                 <div>
-                  <h3 className="text-4xl font-black text-primary mb-1">13+</h3>
+                  <h3 className="text-4xl font-black text-primary mb-1">8+</h3>
                   <p className="text-sm font-medium text-text-main">Години опит</p>
                 </div>
                 <div>
-                  <h3 className="text-4xl font-black text-primary mb-1">2500+</h3>
+                  <h3 className="text-4xl font-black text-primary mb-1">Стотици</h3>
                   <p className="text-sm font-medium text-text-main">Успешни сделки</p>
                 </div>
               </div>
             </div>
             <div className="relative">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl">
-                <img alt="Real estate agents meeting in office" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9SeNIX1Wc4Mf7AL-iuPDsOB0hTWvcxOQ-fNZQPvDvT9f7hzIgO9Auuk9tZ5CJtJb9ciLTIDkhPchCCibTVr5w71bNFMdARLE_LNqkiYPFFc0b8yOfM1DcyQ1G8LQpbSIlFWtj9fxTs9AxX6nWV4PCmTW-ZT0Ussz9fDeW7Im_lqdYpJeEWwuDXZ3aSBoiEFvF9MoxFwWNxi200ELsr24H9R41UU9EVJg1FQ-mUt74V1gZ0i7Ia73BO2GTcyclXUM22Zs-xqqWRNM"/>
+                <img alt="Имоти Христов" className="w-full h-full object-cover p-10" src="/logo.png"/>
               </div>
               {/* Floating card */}
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-lg max-w-[260px] hidden sm:block border border-[#e7f3eb]">
-                <div className="flex items-center gap-3 mb-2">
+              <div className="absolute -bottom-6 -left-10 bg-white p-4 rounded-xl shadow-lg max-w-[260px] hidden sm:block border border-[#e7f3eb]">
+                <div className="flex items-center gap-3">
                   <span className="material-symbols-outlined text-primary text-3xl filled">verified</span>
                   <span className="font-bold text-text-main text-lg">Лицензиран брокер</span>
                 </div>
-                <p className="text-xs text-text-secondary">Член на Национално сдружение Недвижими имоти.</p>
               </div>
             </div>
           </div>
@@ -94,9 +93,9 @@ const About: React.FC = () => {
       </section>
 
       {/* Values Grid */}
-      <section className="py-16 bg-[#eef7f2]">
+      <section className="py-10 bg-[#eef7f2]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <h2 className="text-text-main text-3xl font-bold mb-4">Нашите ценности</h2>
             <p className="text-text-main/70">
               Принципите, които ни водят във всяка сделка и всяко взаимодействие с нашите клиенти.
@@ -134,7 +133,7 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* Team Section */}
+      {/* Team Section 
       <section className="py-16 lg:py-24 bg-background-light">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -164,6 +163,7 @@ const About: React.FC = () => {
           </div>
         </div>
       </section>
+      */}
 
       {/* Testimonials */}
       <section className="py-16 bg-white border-y border-[#e7f3eb]">
@@ -205,7 +205,7 @@ const About: React.FC = () => {
             Свържете се с нас за безплатна консултация. Нашият екип е на разположение да отговори на всички ваши въпроси.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contact" className="px-8 py-3 rounded-lg bg-primary text-[#0d1b12] font-bold text-base hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+            <Link to="/contact" className="px-8 py-3 rounded-lg bg-primary text-[#ffffff] font-bold text-base hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
               Свържете се с нас
             </Link>
             <Link to="/properties" className="px-8 py-3 rounded-lg bg-transparent border border-white/20 text-white font-bold text-base hover:bg-white/10 transition-colors">

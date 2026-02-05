@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useProperties } from '../context/PropertyContext';
+import { supabase } from '../lib/supabase';
 
 const PropertyDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -9,6 +10,13 @@ const PropertyDetails: React.FC = () => {
   // Lightbox State
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // Call modal (desktop: show phone number + copy)
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [callCopied, setCallCopied] = useState(false);
+  // Broker contact form state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const brokerFormRef = useRef<HTMLFormElement>(null);
 
   // Scroll to top when navigating between properties
   useEffect(() => {
@@ -27,7 +35,7 @@ const PropertyDetails: React.FC = () => {
     name: "Имоти Христов",
     role: "Офис",
     phone: "+359 888 123 456",
-    email: "office@imotihristov.bg",
+    email: "imotihristov@gmail.com",
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAPDTZkdIjjqYR-e4e3yrro5-1TbNsbPK92U0GY2Yk9oVy1UpzeCaS63JJYXophPw6pdpofi2XlyAby_6VMIXG8t1myKUTgBWdMy3QzmpB65J2WslTUTgbSa5iINob1VrkLSNLiEGBsoG-YvdKNs3VP08E_Jz9vxHXBIySQMQIN_kfs9raTizpIDGTQrjZbQgm_yddVJIqRjDJ-rXcqWMBxinB5tHiqMsr7TjyEN0Nd8LDPKvrUznZraWOnGuZpfQL8oyE9W62sGDQ"
   };
 
@@ -82,6 +90,78 @@ const PropertyDetails: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, closeLightbox, nextImage, prevImage]);
 
+  const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const brokerPhone = displayBroker.phone.replace(/\s/g, '');
+  const brokerPhoneForViber = brokerPhone.startsWith('+') ? brokerPhone : (brokerPhone.startsWith('0') ? '+359' + brokerPhone.slice(1) : '+359' + brokerPhone);
+
+  const handleCallClick = (e: React.MouseEvent) => {
+    if (isMobile) return; // let default tel: link work
+    e.preventDefault();
+    setShowCallModal(true);
+    setCallCopied(false);
+  };
+
+  const copyBrokerPhone = async () => {
+    try {
+      await navigator.clipboard.writeText(displayBroker.phone);
+      setCallCopied(true);
+      setTimeout(() => setCallCopied(false), 2000);
+    } catch (_) {}
+  };
+
+  const handleBrokerFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!brokerFormRef.current || !property) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData(brokerFormRef.current);
+      
+      const payload = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        message: formData.get('message'),
+        propertyId: property.id.toString(),
+        propertyTitle: property.title,
+        location: property.location,
+        broker: displayBroker.name,
+        type: 'property'
+      };
+
+      console.log('Submitting property inquiry:', payload);
+      
+      const { data, error } = await supabase.functions.invoke('send-inquiry', {
+        body: payload
+      });
+
+      console.log('Edge Function response:', { data, error });
+
+      if (error) {
+        console.error('Edge Function error:', error);
+        throw error;
+      }
+      
+      setIsSuccess(true);
+      console.log('Property inquiry submitted successfully');
+      
+      // Reset form and button after 3 seconds
+      setTimeout(() => {
+        brokerFormRef.current?.reset();
+        setIsSuccess(false);
+        setIsSubmitting(false);
+      }, 3000);
+    } catch (error: any) {
+      console.error('Form submission error:', error);
+      console.error('Error details:', error?.message, error?.context);
+      const errorMsg = error?.context?.body?.error || error?.message || 'Неизвестна грешка';
+      alert(`Грешка при изпращане: ${errorMsg}`);
+      setIsSubmitting(false);
+    }
+  };
+
   if (!property) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background-light">
@@ -117,7 +197,7 @@ const PropertyDetails: React.FC = () => {
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">Няма снимка</div>
             )}
-            {property.isNew && <div className="absolute top-4 left-4 bg-primary text-[#0d1b12] text-xs font-bold px-3 py-1 rounded uppercase tracking-wide shadow-sm z-10">Нов</div>}
+            {property.isNew && <div className="absolute top-4 left-4 bg-primary text-[#ffffff] text-xs font-bold px-3 py-1 rounded uppercase tracking-wide shadow-sm z-10">Нов</div>}
             <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors pointer-events-none"></div>
           </div>
           
@@ -196,19 +276,48 @@ const PropertyDetails: React.FC = () => {
           </div>
         )}
 
+        {/* Call modal (desktop): show broker phone + copy */}
+        {showCallModal && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowCallModal(false)}>
+            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 border border-[#e7f3eb]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-[#0d1b12]">Телефон на брокера</h3>
+                <button type="button" onClick={() => setShowCallModal(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <p className="text-2xl font-black text-primary mb-4">{displayBroker.phone}</p>
+              <div className="flex gap-3">
+                <a href={`tel:${brokerPhone}`} className="flex-1 flex items-center justify-center gap-2 bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary-hover">
+                  <span className="material-symbols-outlined">call</span> Позвъни
+                </a>
+                <button type="button" onClick={copyBrokerPhone} className="flex-1 flex items-center justify-center gap-2 bg-gray-100 text-[#0d1b12] font-bold py-3 rounded-xl hover:bg-gray-200">
+                  {callCopied ? <span className="text-green-600 text-sm">Копирано!</span> : <><span className="material-symbols-outlined">content_copy</span> Копирай</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Left Main Content */}
           <div className="w-full lg:w-2/3 flex flex-col gap-8">
             
             {/* Main Info Card */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
+               {/* Property ID Badge */}
+               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg mb-4">
+                 <span className="material-symbols-outlined text-[18px] text-gray-400">tag</span>
+                 <span className="text-sm font-bold text-gray-600">{property.id}</span>
+               </div>
+
                {/* Title */}
                <h1 className="text-2xl md:text-3xl font-black text-[#0d1b12] mb-3 leading-tight">
                  {property.title}
                </h1>
 
                {/* Location */}
-               <div className="flex items-center gap-2 text-text-secondary mb-8">
+               <div className="flex items-center gap-2 text-text-secondary mb-4">
                   <span className="material-symbols-outlined text-[20px]">location_on</span>
                   <span className="font-medium text-base">{property.location}</span>
                </div>
@@ -317,18 +426,31 @@ const PropertyDetails: React.FC = () => {
             {/* Map */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
               <h3 className="text-xl font-bold text-[#0d1b12] mb-4">Локация</h3>
-              <div className="relative w-full h-[350px] rounded-xl overflow-hidden group border border-gray-100">
-                 <div className="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuB3TsWqOv92rg-joFnldtYqbcStwL4wF0EnLhTtzbjSorzsj_yRrqNKYowdqz26XeLqRvHJWJ0CVMmcv90cKiN8SyzT5krkc5UwlUsdajswvUvH880jTb38Na038Yv6Gadhba4TxH2pn1QiIX7OfsWaxTxNrUS8hykMe_wqaAiazbbZOpKUqXoEiYCMXKpFKSbMnzKtBXcdFt4ZRqtbaK-j_yZexM40Y5XUfqA9Yo30e2rRgEUtkyM1vVB1NafC1Vrt5FRW1EgTeBk")` }}></div>
-                 <div className="absolute inset-0 bg-black/10 flex items-center justify-center group-hover:bg-black/20 transition-all">
-                    <button className="bg-white text-[#0d1b12] px-6 py-3 rounded-full font-bold shadow-lg flex items-center gap-2 hover:scale-105 transition-transform hover:bg-primary hover:text-white">
-                       <span className="material-symbols-outlined">map</span>
-                       Отвори в Google Maps
-                    </button>
-                 </div>
-                 <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-sm font-bold shadow-md text-[#0d1b12] flex items-center gap-2">
+              <div className="relative w-full h-[350px] rounded-xl overflow-hidden border border-gray-100">
+                 <iframe 
+                    width="100%" 
+                    height="100%" 
+                    frameBorder="0" 
+                    scrolling="no" 
+                    marginHeight={0} 
+                    marginWidth={0} 
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(property.neighborhood ? `${property.neighborhood}, ${property.city}, Bulgaria` : `${property.city}, Bulgaria`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    title="Property Location Map"
+                    className="w-full h-full"
+                 ></iframe>
+                 <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-sm font-bold shadow-md text-[#0d1b12] flex items-center gap-2 pointer-events-none">
                     <span className="material-symbols-outlined text-primary text-sm filled">location_on</span>
                     {property.location}
                  </div>
+                 <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.neighborhood ? `${property.neighborhood}, ${property.city}, Bulgaria` : `${property.city}, Bulgaria`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-4 right-4 bg-white text-[#0d1b12] px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-1 hover:bg-primary hover:text-white transition-all"
+                 >
+                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                    Отвори в Google Maps
+                 </a>
               </div>
             </div>
           </div>
@@ -346,51 +468,85 @@ const PropertyDetails: React.FC = () => {
                          <div>
                             <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5">Вашият брокер</p>
                             <h4 className="text-lg font-black text-[#0d1b12]">{displayBroker.name}</h4>
-                            <div className="flex items-center gap-1 text-primary text-xs font-bold mt-1 bg-green-50 px-2 py-0.5 rounded-full w-fit">
+                            {/*<div className="flex items-center gap-1 text-primary text-xs font-bold mt-1 bg-green-50 px-2 py-0.5 rounded-full w-fit">
                                <span className="material-symbols-outlined text-[14px] filled">star</span>
                                <span>4.9 (124 отзива)</span>
-                            </div>
+                            </div>*/}
                          </div>
                       </div>
                       <div className="flex gap-3">
-                        <a href={`tel:${displayBroker.phone}`} className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 text-sm font-bold text-[#0d1b12] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
-                           <span className="material-symbols-outlined text-[20px]">call</span> Позвъни
-                        </a>
-                        <a href={`viber://chat?number=${displayBroker.phone.replace(/[^0-9+]/g, '')}`} className="flex-1 flex items-center justify-center gap-2 bg-[#7360f2] border border-[#7360f2] rounded-xl py-3 text-sm font-bold text-white hover:bg-[#5e4ec2] hover:border-[#5e4ec2] transition-all shadow-sm">
-                           <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M17.498 14.382c-.301-.582-.763-.985-1.127-1.139-.427-.183-.984-.13-1.488.136-.32.167-.655.393-.93.633-.186.162-.358.175-.583-.025-1.123-1.002-2.122-2.094-3.037-3.468-.147-.221-.194-.492.052-.75.244-.257.491-.513.782-.74.37-.289.566-.757.42-1.258-.164-.567-.502-1.114-.85-1.638-.346-.52-.767-.988-1.156-1.364-.462-.447-1.107-.46-1.576-.02-.455.426-.856.883-1.156 1.396-.543.926-.413 1.862.33 2.932.748 1.077 2.016 2.502 3.34 3.774 1.33 1.28 2.87 2.553 4.02 3.326 1.15.772 2.146.908 3.076.326 1.003-.627.91-1.928-.117-2.123zm-3.235-9.288c-.623 0-1.13.507-1.13 1.13 0 .624.507 1.13 1.13 1.13.623 0 1.13-.506 1.13-1.13 0-.623-.507-1.13-1.13-1.13zm1.695 2.26c-.476 0-.86.385-.86.86 0 .476.384.86.86.86.475 0 .86-.384.86-.86 0-.475-.385-.86-.86-.86zm-1.13-3.673c-.623 0-1.13.507-1.13 1.13 0 .623.507 1.13 1.13 1.13.623 0 1.13-.507 1.13-1.13 0-.623-.507-1.13-1.13-1.13zm-.565-3.68c-7.38 0-13.6 5.4-13.6 12.06 0 6.66 6.22 12.06 13.6 12.06 7.38 0 13.6-5.4 13.6-12.06 0-6.66-6.22-12.06-13.6-12.06z"/>
-                           </svg>
+                        {isMobile ? (
+                          <a href={`tel:${brokerPhone}`} className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 text-sm font-bold text-[#0d1b12] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
+                             <span className="material-symbols-outlined text-[20px]">call</span> Позвъни
+                          </a>
+                        ) : (
+                          <button type="button" onClick={handleCallClick} className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 text-sm font-bold text-[#0d1b12] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
+                             <span className="material-symbols-outlined text-[20px]">call</span> Позвъни
+                          </button>
+                        )}
+                        <a href={`viber://chat?number=${brokerPhoneForViber.replace(/\D/g, '')}`} className="flex-1 flex items-center justify-center gap-2 bg-[#7360f2] border border-[#7360f2] rounded-xl py-3 text-sm font-bold text-white hover:bg-[#5e4ec2] hover:border-[#5e4ec2] transition-all shadow-sm" title="Отвори Viber">
+                           {/*<img src="/viber.svg" alt="" className="w-5 h-5" />*/}
                            Viber
                         </a>
                       </div>
                    </div>
                    <div className="p-6">
                       <h3 className="font-bold text-[#0d1b12] mb-4">Заяви оглед или попитай</h3>
-                      <form className="flex flex-col gap-4">
+                      <form 
+                        ref={brokerFormRef}
+                        className="flex flex-col gap-4" 
+                        onSubmit={handleBrokerFormSubmit}
+                      >
                         <div className="relative group">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px] group-focus-within:text-primary transition-colors">person</span>
-                            <input className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-all" placeholder="Вашето име" type="text"/>
+                            <input className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-all" placeholder="Вашето име" type="text" name="name" required disabled={isSubmitting || isSuccess} />
+                        </div>
+                        <div className="relative group">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px] group-focus-within:text-primary transition-colors">mail</span>
+                            <input className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-all" placeholder="Имейл адрес" type="email" name="email" required disabled={isSubmitting || isSuccess} />
                         </div>
                         <div className="relative group">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px] group-focus-within:text-primary transition-colors">smartphone</span>
-                            <input className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-all" placeholder="Телефон за връзка" type="tel"/>
+                            <input className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-all" placeholder="Телефон за връзка" type="tel" name="phone" required disabled={isSubmitting || isSuccess} />
                         </div>
-                        <textarea className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none transition-all" placeholder="Здравейте, интересувам се от този имот..." rows={3}></textarea>
+                        <textarea className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm resize-none transition-all" placeholder="Здравейте, интересувам се от този имот..." rows={3} name="message" required disabled={isSubmitting || isSuccess}></textarea>
                         
                         <div className="flex items-start gap-2 mb-2">
-                            <input type="checkbox" className="mt-1 rounded text-primary focus:ring-primary border-gray-300 w-4 h-4 cursor-pointer" id="gdpr_check" />
+                            <input type="checkbox" className="mt-1 rounded text-primary focus:ring-primary border-gray-300 w-4 h-4 cursor-pointer" id="gdpr_check" required disabled={isSubmitting || isSuccess} />
                             <label htmlFor="gdpr_check" className="text-xs text-gray-500 cursor-pointer select-none">Съгласен съм с <a href="#" className="underline hover:text-primary">Общите условия</a> и Политиката за лични данни.</label>
                         </div>
                         
-                        <button className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-green-200 hover:shadow-xl transition-all flex items-center justify-center gap-2 transform active:scale-[0.98]">
-                            <span>Изпрати запитване</span>
-                            <span className="material-symbols-outlined text-sm">send</span>
+                        <button 
+                          type="submit" 
+                          disabled={isSubmitting || isSuccess}
+                          className={`w-full font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+                            isSuccess 
+                              ? 'bg-green-500 text-white cursor-default' 
+                              : 'bg-primary hover:bg-primary-hover text-white shadow-green-200 hover:shadow-xl transform active:scale-[0.98]'
+                          } ${(isSubmitting || isSuccess) ? 'cursor-not-allowed' : ''}`}
+                        >
+                           {isSuccess ? (
+                             <>
+                               <span>Изпратено</span>
+                               <span className="material-symbols-outlined text-sm">check_circle</span>
+                             </>
+                           ) : isSubmitting ? (
+                             <>
+                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                               <span>Изпращане...</span>
+                             </>
+                           ) : (
+                             <>
+                               <span>Изпрати запитване</span>
+                               <span className="material-symbols-outlined text-sm">send</span>
+                             </>
+                           )}
                         </button>
                       </form>
                    </div>
                 </div>
                 
-                {/* Calculator Banner */}
+                {/* Calculator Banner *
                 <div className="bg-gradient-to-r from-[#e7f3eb] to-white p-5 rounded-2xl flex items-center gap-4 border border-[#cfe7d7] shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
                    <div className="size-12 rounded-full bg-white flex items-center justify-center text-primary shadow-sm shrink-0 group-hover:scale-110 transition-transform">
                        <span className="material-symbols-outlined filled">calculate</span>
@@ -402,6 +558,7 @@ const PropertyDetails: React.FC = () => {
                        </span>
                    </div>
                 </div>
+                */}
              </div>
           </div>
         </div>
