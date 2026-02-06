@@ -31,7 +31,7 @@ const About: React.FC = () => {
               <span className="text-primary">агенция за имоти</span>
             </h1>
             <p className="text-white/90 text-lg sm:text-xl font-normal leading-relaxed max-w-2xl mb-8">
-              Ние създаваме връзки между хора и домове. История за доверие, професионализъм и споделени мечти, която започва през 2010 година.
+              Ние създаваме връзки между хора и домове. История за доверие, професионализъм и споделени мечти, която започва през 2018 година.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/services" className="flex items-center justify-center rounded-lg h-12 px-6 bg-primary text-[#ffffff] text-base font-bold hover:bg-primary/90 transition-colors">

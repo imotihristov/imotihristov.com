@@ -13,8 +13,7 @@ const Footer: React.FC = () => {
               </Link>
             </div>
             <p className="text-text-secondary text-sm leading-relaxed mb-6">
-              Вашият доверен партньор в света на недвижимите имоти. Професионализъм и коректност от 2010 г.
-            </p>
+              Вашият доверен партньор в света на недвижимите имоти.
             <div className="flex gap-4">
               <a href="https://www.facebook.com/imothristov" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white border border-[#e7f3eb] flex items-center justify-center text-text-main hover:bg-[#0866ff] hover:text-white hover:border-[#0866ff] transition-all duration-300 shadow-sm" title="Facebook" aria-label="Facebook">
                 <img src="/facebook.svg" alt="" className="w-8 h-8" />
@@ -63,7 +62,7 @@ const Footer: React.FC = () => {
         </div>
         <div className="border-t border-[#e7f3eb] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-text-secondary text-center md:text-left">
-            © 2023 Агенция Имоти Христов. Всички права запазени.
+            © 2018 Агенция Имоти Христов. Всички права запазени.
           </p>
           <div className="flex gap-6 text-xs text-text-secondary">
             <Link to="#" className="hover:text-primary">Политика за поверителност</Link>
