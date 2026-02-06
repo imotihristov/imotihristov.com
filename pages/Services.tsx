@@ -31,7 +31,7 @@ const Services: React.FC = () => {
             <h2 className="text-3xl font-bold text-text-main mb-4">Цялостно обслужване на едно място</h2>
             <p className="text-text-secondary max-w-2xl">Ние не просто продаваме имоти, ние създаваме дългосрочни партньорства чрез качество и доверие.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {icon: 'currency_exchange', title: 'Покупко-продажба', desc: 'Посредничество при покупка и продажба на жилищни и търговски имоти с пълна прозрачност. Осигуряваме най-добрата цена за вашия имот.'},
               {icon: 'key', title: 'Наеми', desc: 'Съдействие за наемодатели и наематели за намиране на перфектното съвпадение. Управление на договори и огледи.'},
@@ -40,7 +40,7 @@ const Services: React.FC = () => {
               {icon: 'trending_up', title: 'Оценки', desc: 'Професионална оценка на имоти и пазарен анализ за определяне на точната цена. Реалистични прогнози за възвръщаемост.'},
               {icon: 'apartment', title: 'Управление на имоти', desc: 'Цялостна грижа за вашия имот, включително поддръжка, ремонти и комуникация с наематели.'},
             ].map((service, idx) => (
-              <div key={idx} className="group relative bg-background-light rounded-xl p-8 border border-[#e7f3eb] hover:border-primary/50 hover:shadow-lg transition-all duration-300 flex flex-col h-full">
+              <div key={idx} className="group relative bg-background-light rounded-xl p-4 md:p-8 border border-[#e7f3eb] hover:border-primary/50 hover:shadow-lg transition-all duration-300 flex flex-col h-full">
                 <div className="mb-6 inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
                   <span className="material-symbols-outlined text-[32px]">{service.icon}</span>
                 </div>
@@ -84,7 +84,7 @@ const Services: React.FC = () => {
                 </div>
                 <h3 className="font-bold text-lg text-text-main mb-2">Организация на огледи</h3>
                 <p className="text-sm text-text-secondary mb-4 flex-grow">
-                  Не таксуваме за огледи. Включва и виртуални огледи по Skype, Viber или Messenger.
+                  Не таксуваме за огледи. Включва и виртуални огледи по Viber или Messenger.
                 </p>
                 <div className="mt-auto px-4 py-1 bg-green-100 text-green-700 font-bold rounded-full text-sm">
                   БЕЗПЛАТНО
@@ -98,7 +98,7 @@ const Services: React.FC = () => {
                 </div>
                 <h3 className="font-bold text-lg text-text-main mb-2">Заснемане и Реклама</h3>
                 <p className="text-sm text-text-secondary mb-4 flex-grow">
-                  Професионално фото заснемане, видеоклип и реклама в нашите канали и социални мрежи.
+                  Професионално фото заснемане и реклама в нашите канали и социални мрежи.
                 </p>
                 <div className="mt-auto px-4 py-1 bg-green-100 text-green-700 font-bold rounded-full text-sm">
                   БЕЗПЛАТНО*

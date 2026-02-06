@@ -11,8 +11,8 @@ const team: TeamMember[] = [
 
 const testimonials: Testimonial[] = [
   { id: 1, text: "Изключително професионално отношение! Екипът на Имоти Христов направи продажбата на апартамента ни лесна и бърза.", author: "Петър Тодоров", location: "Шумен", rating: 5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" },
-  { id: 2, text: "Благодарение на Мария намерихме перфектния дом за нашето семейство. Препоръчвам горещо!", author: "Ани Георгиева", location: "Шумен", rating: 5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" },
-  { id: 3, text: "Коректност и прозрачност. Много съм доволен от консултацията и съдействието при документите.", author: "Димитър Василев", location: "Шумен", rating: 4.5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" }
+  { id: 2, text: "Благодарение на Ивайло намерихме перфектния дом за нашето семейство. Препоръчвам!", author: "Ани Георгиева", location: "Шумен", rating: 5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" },
+  { id: 3, text: "Коректност и прозрачност. Много съм доволен от консултацията и съдействието при документите.", author: "Бейхан Юнусов", location: "Шумен", rating: 4.5, image: "https://ik.imagekit.io/khvvoa8bvd/daweid-icon-7797704_1920.png" }
 ];
 
 const About: React.FC = () => {
@@ -46,7 +46,7 @@ const About: React.FC = () => {
       </section>
 
       {/* Story Section */}
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-10 lg:py-12 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="flex flex-col gap-6">
@@ -65,18 +65,18 @@ const About: React.FC = () => {
                   Днес, повече от десетилетие по-късно, ние сме горди, че сме помогнали на хиляди семейства да открият своя мечтан дом или да реализират успешна инвестиция. Ние вярваме, че всеки клиент заслужава лично отношение, компетентен съвет и сигурност във всяка стъпка от сделката.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-6 mt-4 pt-6 border-t border-[#e7f3eb]">
-                <div>
-                  <h3 className="text-4xl font-black text-primary mb-1">8+</h3>
+              <div className="grid grid-cols-2 gap-1 md:gap-6 mt-4 pt-6 px-6 md:px-0 border-t border-[#e7f3eb]">
+                <div className="text-center md:text-left">
+                  <h3 className="text-3xl md:text-4xl font-black text-primary mb-1">8+</h3>
                   <p className="text-sm font-medium text-text-main">Години опит</p>
                 </div>
-                <div>
-                  <h3 className="text-4xl font-black text-primary mb-1">Стотици</h3>
+                <div className="text-center md:text-left">
+                  <h3 className="text-3xl md:text-4xl font-black text-primary mb-1">Стотици</h3>
                   <p className="text-sm font-medium text-text-main">Успешни сделки</p>
                 </div>
               </div>
             </div>
-            <div className="relative">
+            <div className="hidden sm:block relative">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl">
                 <img alt="Имоти Христов" className="w-full h-full object-cover p-10" src="/logo.png"/>
               </div>
@@ -166,7 +166,7 @@ const About: React.FC = () => {
       */}
 
       {/* Testimonials */}
-      <section className="py-16 bg-white border-y border-[#e7f3eb]">
+      <section className="py-10 bg-white border-y border-[#e7f3eb]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-text-main text-3xl font-bold mb-4">Какво казват нашите клиенти</h2>

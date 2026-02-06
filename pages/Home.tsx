@@ -395,11 +395,11 @@ const Home: React.FC = () => {
                </Link>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-2">
                {recommendedProperties.map((prop) => (
                   <Link to={`/properties/${prop.id}`} key={prop.id} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group block">
-                     <div className="relative h-auto lg:h-64 overflow-hidden">
-                        <img src={prop.image} alt={prop.title} className="w-auto lg:w-full h-auto lg:h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                     <div className="relative h-32 md:h-48 lg:h-64 overflow-hidden">
+                        <img src={prop.image} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute top-4 left-4">
                            <span className={`hidden lg:block px-3 py-1 rounded-md text-xs font-bold uppercase text-white shadow-sm ${prop.type === 'sale' ? 'bg-primary' : 'bg-blue-500'}`}>
                               {prop.type === 'sale' ? 'Продажба' : 'Наем'}
@@ -457,7 +457,7 @@ const Home: React.FC = () => {
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-end mb-8">
                <div>
-                  <h2 className="text-2xl md:text-3xl font-black text-[#0d1b12]">Последни добавени</h2>
+                  <h2 className="text-2xl md:text-3xl font-black text-[#0d1b12]">Последно добавени</h2>
                   <p className="text-text-secondary mt-1">Вижте най-новите предложения на пазара</p>
                </div>
                <Link to="/properties" className="hidden sm:flex items-center gap-1 text-primary font-bold hover:underline">
@@ -468,8 +468,8 @@ const Home: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
                {latestProperties.map((prop) => (
                   <Link to={`/properties/${prop.id}`} key={prop.id} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 group block">
-                     <div className="relative h-auto lg:h-48 overflow-hidden">
-                        <img src={prop.image} alt={prop.title} className="w-auto lg:w-full h-auto lg:h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                     <div className="relative h-36 md:h-40 lg:h-48 overflow-hidden">
+                        <img src={prop.image} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                      </div>
                      <div className="p-4">
                         <h3 className="text-lg font-black text-primary mb-1">{prop.currency === '€' ? `€ ${prop.price.toLocaleString()}` : `${prop.currency.split(' ')[0]} ${prop.price} / мес.`}</h3>

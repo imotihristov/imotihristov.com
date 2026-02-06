@@ -56,7 +56,7 @@ const Header: React.FC = () => {
         {/* Right Actions */}
         <div className="flex items-center gap-3">
            {/* Search by ID Input */}
-          <form onSubmit={handleSearch} className="flex items-center bg-white border border-[#cfe7d7] rounded-lg px-3 h-10 w-36 md:w-48 focus-within:ring-2 focus-within:ring-primary/50 transition-all shadow-sm shadow-gray-200/50">
+          <form onSubmit={handleSearch} className="flex items-center bg-white border border-[#cfe7d7] rounded-lg px-3 h-10 w-40 md:w-48 focus-within:ring-2 focus-within:ring-primary/50 transition-all shadow-sm shadow-gray-200/50">
             <span className="material-symbols-outlined text-text-secondary text-[20px] leading-none flex items-center">search</span>
             <input 
               className="bg-transparent border-none focus:ring-0 text-sm w-full text-text-main placeholder:text-text-secondary/70 p-0 pl-2 h-full" 
