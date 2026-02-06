@@ -465,7 +465,7 @@ const Home: React.FC = () => {
                </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-2">
                {latestProperties.map((prop) => (
                   <Link to={`/properties/${prop.id}`} key={prop.id} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 group block">
                      <div className="relative h-36 md:h-40 lg:h-48 overflow-hidden">

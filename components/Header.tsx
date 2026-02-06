@@ -38,7 +38,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#e7f3eb] bg-white backdrop-blur-md">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-1 sm:px-1 lg:px-1">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-3 sm:px-1 lg:px-1">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
           <img src="/logo.png" alt="Имоти Христов" className="h-28 w-auto object-contain" />
