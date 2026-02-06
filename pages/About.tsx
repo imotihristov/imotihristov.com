@@ -46,7 +46,7 @@ const About: React.FC = () => {
       </section>
 
       {/* Story Section */}
-      <section className="py-16 lg:py-24 bg-background-light">
+      <section className="py-16 lg:py-24 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="flex flex-col gap-6">
@@ -93,7 +93,7 @@ const About: React.FC = () => {
       </section>
 
       {/* Values Grid */}
-      <section className="py-10 bg-[#eef7f2]">
+      <section className="py-10 bg-background-light">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <h2 className="text-text-main text-3xl font-bold mb-4">Нашите ценности</h2>

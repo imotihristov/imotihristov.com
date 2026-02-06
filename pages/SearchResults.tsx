@@ -197,13 +197,13 @@ const SearchResults: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-2 lg:gap-10">
           {/* Sidebar Filters */}
           <aside className="w-full lg:w-72 shrink-0">
             {/* Mobile Toggle Button */}
             <button 
               onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
-              className="lg:hidden w-full flex items-center justify-between bg-white border border-[#e7f3eb] p-4 rounded-xl mb-4 shadow-sm font-bold text-text-main hover:border-primary transition-colors"
+              className="lg:hidden w-full flex items-center justify-between bg-white border border-[#e7f3eb] p-4 rounded-xl mb-6 shadow-sm font-bold text-text-main hover:border-primary transition-colors"
             >
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">tune</span>
@@ -232,7 +232,7 @@ const SearchResults: React.FC = () => {
                    <select 
                       value={filters.category} 
                       onChange={(e) => setFilters({...filters, category: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#f8fcf9] border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary"
+                      className="w-full px-3 py-2 bg-secondary-light border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary"
                    >
                      <option value="sale">Продажба</option>
                      <option value="rent">Наем</option>
@@ -247,7 +247,7 @@ const SearchResults: React.FC = () => {
                     <select 
                       value={filters.city}
                       onChange={(e) => setFilters({...filters, city: e.target.value, neighborhood: ''})}
-                      className="w-full pl-10 pr-8 py-2 bg-[#f8fcf9] border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary appearance-none" 
+                      className="w-full pl-10 pr-8 py-2 bg-secondary-light border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary appearance-none" 
                     >
                       <option value="">Всички градове</option>
                       {availableCities.map(city => (
@@ -267,7 +267,7 @@ const SearchResults: React.FC = () => {
                       value={filters.neighborhood}
                       onChange={(e) => setFilters({...filters, neighborhood: e.target.value})}
                       disabled={!filters.city}
-                      className={`w-full pl-10 pr-8 py-2 bg-[#f8fcf9] border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary appearance-none ${!filters.city ? 'cursor-not-allowed opacity-60' : ''}`} 
+                      className={`w-full pl-10 pr-8 py-2 bg-secondary-light border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary appearance-none ${!filters.city ? 'cursor-not-allowed opacity-60' : ''}`} 
                     >
                       <option value="">Всички квартали</option>
                       {availableNeighborhoods.map(hood => (
@@ -285,7 +285,7 @@ const SearchResults: React.FC = () => {
                     <input 
                       value={filters.minPrice}
                       onChange={(e) => setFilters({...filters, minPrice: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#f8fcf9] border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary" 
+                      className="w-full px-3 py-2 bg-secondary-light border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary" 
                       placeholder="От" 
                       type="number"
                     />
@@ -293,7 +293,7 @@ const SearchResults: React.FC = () => {
                     <input 
                       value={filters.maxPrice}
                       onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
-                      className="w-full px-3 py-2 bg-[#f8fcf9] border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary" 
+                      className="w-full px-3 py-2 bg-secondary-light border border-[#e7f3eb] rounded-lg text-sm focus:ring-primary focus:border-primary" 
                       placeholder="До" 
                       type="number"
                     />
@@ -309,7 +309,7 @@ const SearchResults: React.FC = () => {
                       const hasSelectedChild = types.some(t => filters.types.includes(t));
 
                       return (
-                        <div key={category} className="border border-[#e7f3eb] rounded-lg overflow-hidden bg-[#f8fcf9]">
+                        <div key={category} className="border border-[#e7f3eb] rounded-lg overflow-hidden bg-secondary-light">
                           <button
                             onClick={() => toggleCategory(category)}
                             className={`w-full flex items-center justify-between p-3 text-left text-sm font-semibold transition-colors ${hasSelectedChild ? 'text-primary bg-green-50' : 'text-text-main hover:bg-gray-100'}`}

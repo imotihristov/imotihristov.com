@@ -10,6 +10,10 @@ const PropertyDetails: React.FC = () => {
   // Lightbox State
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // Gallery navigation (desktop grid view without opening lightbox)
+  const [currentGridIndex, setCurrentGridIndex] = useState(0);
+  // Mobile carousel
+  const [mobileCarouselIndex, setMobileCarouselIndex] = useState(0);
   // Call modal (desktop: show phone number + copy)
   const [showCallModal, setShowCallModal] = useState(false);
   const [callCopied, setCallCopied] = useState(false);
@@ -93,6 +97,17 @@ const PropertyDetails: React.FC = () => {
   const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const brokerPhone = displayBroker.phone.replace(/\s/g, '');
   const brokerPhoneForViber = brokerPhone.startsWith('+') ? brokerPhone : (brokerPhone.startsWith('0') ? '+359' + brokerPhone.slice(1) : '+359' + brokerPhone);
+
+  // Desktop grid navigation (without opening lightbox)
+  const nextGridImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentGridIndex((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevGridImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentGridIndex((prev) => (prev + slides.length - 1) % slides.length);
+  };
 
   const handleCallClick = (e: React.MouseEvent) => {
     if (isMobile) return; // let default tel: link work
@@ -186,43 +201,139 @@ const PropertyDetails: React.FC = () => {
         </nav>
 
         {/* Gallery Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 h-auto md:h-[500px] rounded-xl overflow-hidden relative group">
-          {/* Main Large Image */}
-          <div 
-            className="md:col-span-3 h-[300px] md:h-full relative cursor-pointer overflow-hidden bg-gray-100"
-            onClick={() => openLightbox(0)}
-          >
-            {property.image ? (
-              <div className="w-full h-full bg-cover bg-center transition-transform duration-500 hover:scale-105" style={{ backgroundImage: `url("${property.image}")` }}></div>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">Няма снимка</div>
+        <section className="mb-4 md:mb-8">
+          {/* Mobile Carousel */}
+          <div className="md:hidden">
+            {/* Main Swipeable Image Container */}
+            <div className="relative h-[300px] mb-3 rounded-xl overflow-hidden bg-gray-100">
+              <div 
+                className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                style={{ scrollBehavior: 'smooth' }}
+                onScroll={(e) => {
+                  const container = e.currentTarget;
+                  const scrollLeft = container.scrollLeft;
+                  const itemWidth = container.offsetWidth;
+                  const index = Math.round(scrollLeft / itemWidth);
+                  setMobileCarouselIndex(index);
+                }}
+              >
+                {slides.map((slide, idx) => (
+                  <div 
+                    key={idx}
+                    className="min-w-full h-full flex-shrink-0 snap-center snap-always cursor-pointer"
+                    onClick={() => openLightbox(idx)}
+                  >
+                    <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url("${slide}")` }}></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Image Counter */}
+              <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full z-10">
+                {mobileCarouselIndex + 1} / {slides.length}
+              </div>
+
+              {property.isNew && <div className="absolute top-3 left-3 bg-primary text-[#ffffff] text-xs font-bold px-3 py-1 rounded uppercase tracking-wide shadow-sm z-10">Нов</div>}
+            </div>
+
+            {/* Thumbnail Preview Strip */}
+            {slides.length > 1 && (
+              <div className="flex gap-2 overflow-x-none pb-2 px-1 scrollbar-hide">
+                {slides.map((slide, idx) => (
+                  <button
+                    key={idx}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      idx === mobileCarouselIndex 
+                        ? 'border-primary scale-105 shadow-lg' 
+                        : 'border-gray-200 opacity-60'
+                    }`}
+                    onClick={() => {
+                      const container = document.querySelector('.snap-x');
+                      if (container) {
+                        container.scrollTo({
+                          left: idx * container.clientWidth,
+                          behavior: 'smooth'
+                        });
+                      }
+                      setMobileCarouselIndex(idx);
+                    }}
+                  >
+                    <div 
+                      className="w-full h-full bg-cover bg-center" 
+                      style={{ backgroundImage: `url("${slide}")` }}
+                    ></div>
+                  </button>
+                ))}
+              </div>
             )}
-            {property.isNew && <div className="absolute top-4 left-4 bg-primary text-[#ffffff] text-xs font-bold px-3 py-1 rounded uppercase tracking-wide shadow-sm z-10">Нов</div>}
-            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors pointer-events-none"></div>
           </div>
-          
-          {/* Side Images (Visual Placeholders that open the lightbox) */}
-          <div className="hidden md:flex flex-col gap-4 h-full">
-            {/* Top Side Image */}
+
+          {/* Desktop Gallery Grid */}
+          <div className="hidden md:grid grid-cols-4 gap-4 h-[500px] rounded-xl overflow-hidden relative group">
+            {/* Main Large Image with Navigation */}
             <div 
-              className="flex-1 relative cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-              onClick={() => openLightbox(slides.length > 1 ? 1 : 0)}
+              className="col-span-3 h-full relative cursor-pointer overflow-hidden bg-gray-100"
+              onClick={() => openLightbox(currentGridIndex)}
             >
-               {property.image && <div className="w-full h-full bg-cover bg-center transition-transform duration-500 hover:scale-105" style={{ backgroundImage: `url("${slides[1] || property.image}")`, filter: slides.length > 1 ? 'none' : 'brightness(0.9)' }}></div>}
+              {slides[currentGridIndex] ? (
+                <div className="w-full h-full bg-cover bg-center transition-transform duration-500 hover:scale-105" style={{ backgroundImage: `url("${slides[currentGridIndex]}")` }}></div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">Няма снимка</div>
+              )}
+              {property.isNew && <div className="absolute top-4 left-4 bg-primary text-[#ffffff] text-xs font-bold px-3 py-1 rounded uppercase tracking-wide shadow-sm z-10">Нов</div>}
+              
+              {/* Desktop Grid Navigation Arrows */}
+              {slides.length > 1 && (
+                <>
+                  <button 
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full h-8 w-8 bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                    onClick={prevGridImage}
+                  >
+                    <span className="material-symbols-outlined">chevron_left</span>
+                  </button>
+                  <button 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full h-8 w-8 bg-black/50 text-white hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                    onClick={nextGridImage}
+                  >
+                    <span className="material-symbols-outlined">chevron_right</span>
+                  </button>
+                  
+                  {/* Image Counter */}
+                  <div className="absolute top-4 right-4 bg-black/50 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                    {currentGridIndex + 1} / {slides.length}
+                  </div>
+                </>
+              )}
+              
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors pointer-events-none"></div>
             </div>
             
-            {/* Bottom Side Image with "See All" overlay */}
-            <div 
-              className="flex-1 relative cursor-pointer overflow-hidden rounded-lg bg-gray-100"
-              onClick={() => openLightbox(0)}
-            >
-               {property.image && <div className="w-full h-full bg-cover bg-center transition-transform duration-500 hover:scale-105" style={{ backgroundImage: `url("${slides[2] || property.image}")`, filter: slides.length > 2 ? 'none' : 'brightness(0.8)' }}></div>}
-               <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity hover:bg-black/50">
-                 <button className="flex items-center gap-2 text-white font-bold bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg border border-white/50 transition-all pointer-events-none">
+            {/* Side Images (Thumbnails that update main image) */}
+            <div className="flex flex-col gap-4 h-full">
+              {/* Top Side Image */}
+              <div 
+                className="flex-1 relative cursor-pointer overflow-hidden rounded-lg bg-gray-100 border-2 border-transparent hover:border-primary transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (slides.length > 1) setCurrentGridIndex(1);
+                }}
+              >
+                {slides[1] && <div className="w-full h-full bg-cover bg-center transition-transform duration-500 hover:scale-105" style={{ backgroundImage: `url("${slides[1]}")` }}></div>}
+              </div>
+              
+              {/* Bottom Side Image with "See All" overlay */}
+              <div 
+                className="flex-1 relative cursor-pointer overflow-hidden rounded-lg bg-gray-100"
+                onClick={() => openLightbox(currentGridIndex)}
+              >
+                {slides[2] && <div className="w-full h-full bg-cover bg-center transition-transform duration-500 hover:scale-105" style={{ backgroundImage: `url("${slides[2]}")` }}></div>}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity hover:bg-black/50">
+                  <button className="flex items-center gap-2 text-white font-bold bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg border border-white/50 transition-all pointer-events-none">
                     <span className="material-symbols-outlined">grid_view</span>
                     <span>Виж всички</span>
-                 </button>
-               </div>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -230,47 +341,123 @@ const PropertyDetails: React.FC = () => {
         {/* Lightbox Modal */}
         {isLightboxOpen && (
           <div 
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center"
+            className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm"
             onClick={closeLightbox}
           >
             {/* Close Button */}
             <button 
-              className="absolute top-4 right-4 z-[110] p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+              className="absolute h-10 w-10 top-4 right-4 z-[110] p-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
               onClick={closeLightbox}
             >
               <span className="material-symbols-outlined text-3xl">close</span>
             </button>
 
-            {/* Navigation Arrows (Only if multiple images) */}
-            {slides.length > 1 && (
-              <>
-                <button 
-                  className="absolute left-4 z-[110] p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                  onClick={prevImage}
+            {/* Mobile Lightbox - Swipeable with Thumbnails */}
+            <div className="md:hidden h-full flex flex-col items-center justify-center px-4 py-12">
+              {/* Main Swipeable Container */}
+              <div 
+                className="w-[90vw] mb-4 relative"
+                style={{ height: 'auto', maxHeight: '50vh' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div 
+                  className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                  style={{ scrollBehavior: 'smooth' }}
+                  onScroll={(e) => {
+                    const container = e.currentTarget;
+                    const scrollLeft = container.scrollLeft;
+                    const itemWidth = container.offsetWidth;
+                    const index = Math.round(scrollLeft / itemWidth);
+                    setCurrentImageIndex(index);
+                  }}
                 >
-                  <span className="material-symbols-outlined text-3xl">chevron_left</span>
-                </button>
-                <button 
-                  className="absolute right-4 z-[110] p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
-                  onClick={nextImage}
-                >
-                  <span className="material-symbols-outlined text-3xl">chevron_right</span>
-                </button>
-              </>
-            )}
+                  {slides.map((slide, idx) => (
+                    <div 
+                      key={idx}
+                      className="w-full h-full flex-shrink-0 snap-center snap-always flex items-center justify-center px-2"
+                    >
+                      <img 
+                        src={slide} 
+                        alt={`${property.title} - ${idx + 1}`}
+                        className="max-w-full max-h-full w-auto h-auto object-contain"
+                      />
+                    </div>
+                  ))}
+                </div>
 
-            {/* Main Image */}
-            <div 
-              className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center justify-center" 
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img 
-                src={slides[currentImageIndex]} 
-                alt={`${property.title} - ${currentImageIndex + 1}`}
-                className="max-w-full max-h-[85vh] object-contain rounded shadow-2xl"
-              />
-              <div className="mt-4 text-white/80 font-medium text-sm">
-                 {currentImageIndex + 1} / {slides.length}
+                {/* Image Counter */}
+                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-sm font-bold px-3 py-1.5 rounded-full z-10">
+                  {currentImageIndex + 1} / {slides.length}
+                </div>
+              </div>
+
+              {/* Thumbnail Preview Strip */}
+              <div 
+                className="w-full flex gap-2 overflow-x-auto pb-2 scrollbar-hide justify-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {slides.map((slide, idx) => (
+                  <button
+                    key={idx}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      idx === currentImageIndex 
+                        ? 'border-primary scale-105 shadow-lg' 
+                        : 'border-white/30 opacity-60'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const container = document.querySelector('.fixed.inset-0 .snap-x');
+                      if (container) {
+                        container.scrollTo({
+                          left: idx * container.clientWidth,
+                          behavior: 'smooth'
+                        });
+                      }
+                      setCurrentImageIndex(idx);
+                    }}
+                  >
+                    <div 
+                      className="w-full h-full bg-cover bg-center" 
+                      style={{ backgroundImage: `url("${slide}")` }}
+                    ></div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop Lightbox - Traditional with Arrows */}
+            <div className="hidden md:flex items-center justify-center h-full">
+              {/* Navigation Arrows (Only if multiple images) */}
+              {slides.length > 1 && (
+                <>
+                  <button 
+                    className="absolute left-4 z-[110] p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                    onClick={prevImage}
+                  >
+                    <span className="material-symbols-outlined text-3xl">chevron_left</span>
+                  </button>
+                  <button 
+                    className="absolute right-4 z-[110] p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                    onClick={nextImage}
+                  >
+                    <span className="material-symbols-outlined text-3xl">chevron_right</span>
+                  </button>
+                </>
+              )}
+
+              {/* Main Image */}
+              <div 
+                className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center justify-center" 
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img 
+                  src={slides[currentImageIndex]} 
+                  alt={`${property.title} - ${currentImageIndex + 1}`}
+                  className="max-w-full max-h-[85vh] object-contain rounded shadow-2xl"
+                />
+                <div className="mt-4 text-white/80 font-medium text-sm">
+                   {currentImageIndex + 1} / {slides.length}
+                </div>
               </div>
             </div>
           </div>
@@ -299,14 +486,14 @@ const PropertyDetails: React.FC = () => {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-8 items-start">
           {/* Left Main Content */}
-          <div className="w-full lg:w-2/3 flex flex-col gap-8">
+          <div className="w-full lg:w-2/3 flex flex-col gap-4 md:gap-8">
             
             {/* Main Info Card */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
+            <div className="bg-white p-4 md:p-6 lg:p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
                {/* Property ID Badge */}
-               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg mb-4">
+               <div className="inline-flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 bg-gray-50 border border-gray-200 rounded-lg mb-4">
                  <span className="material-symbols-outlined text-[18px] text-gray-400">tag</span>
                  <span className="text-sm font-bold text-gray-600">{property.id}</span>
                </div>
@@ -335,27 +522,27 @@ const PropertyDetails: React.FC = () => {
                </div>
 
                {/* Stats Grid */}
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-gray-100">
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 pt-4 md:pt-8 border-t border-gray-100">
                   {/* Area */}
                   <div className="flex items-center gap-3">
-                     <div className="size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
+                     <div className="size-10 md:size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
                         <span className="material-symbols-outlined filled">square_foot</span>
                      </div>
                      <div>
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Площ</p>
-                        <p className="font-bold text-[#0d1b12] text-lg leading-none">{property.area} кв.м</p>
+                        <p className="text-xs md:text-sm text-gray-400 font-medium uppercase tracking-wide mb-0.5">Площ</p>
+                        <p className="font-bold text-[#0d1b12] text-sm md:text-lg leading-none">{property.area} кв.м</p>
                      </div>
                   </div>
 
                   {/* Bedrooms */}
                   {property.beds !== undefined && property.beds > 0 && (
                     <div className="flex items-center gap-3">
-                        <div className="size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
+                        <div className="size-10 md:size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
                            <span className="material-symbols-outlined filled">bed</span>
                         </div>
                         <div>
                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Спални</p>
-                           <p className="font-bold text-[#0d1b12] text-lg leading-none">{property.beds}</p>
+                           <p className="font-bold text-[#0d1b12] text-sm md:text-lg leading-none">{property.beds}</p>
                         </div>
                     </div>
                   )}
@@ -363,12 +550,12 @@ const PropertyDetails: React.FC = () => {
                   {/* Floor */}
                   {property.floor && (
                     <div className="flex items-center gap-3">
-                        <div className="size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
+                        <div className="size-10 md:size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
                            <span className="material-symbols-outlined filled">layers</span>
                         </div>
                         <div>
                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Етаж</p>
-                           <p className="font-bold text-[#0d1b12] text-lg leading-none">{property.floor}</p>
+                           <p className="font-bold text-[#0d1b12] text-sm md:text-lg leading-none">{property.floor}</p>
                         </div>
                     </div>
                   )}
@@ -376,12 +563,12 @@ const PropertyDetails: React.FC = () => {
                   {/* Construction */}
                   {property.constructionType && (
                     <div className="flex items-center gap-3">
-                        <div className="size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
+                        <div className="size-10 md:size-12 rounded-full bg-green-50 flex items-center justify-center text-primary shrink-0">
                            <span className="material-symbols-outlined filled">domain</span>
                         </div>
                         <div>
                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Строителство</p>
-                           <p className="font-bold text-[#0d1b12] text-lg leading-none">{property.constructionType}</p>
+                           <p className="font-bold text-[#0d1b12] text-sm md:text-lg leading-none">{property.constructionType}</p>
                         </div>
                     </div>
                   )}
@@ -394,7 +581,7 @@ const PropertyDetails: React.FC = () => {
                         </div>
                         <div>
                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Помещения</p>
-                           <p className="font-bold text-[#0d1b12] text-lg leading-none">{property.rooms}</p>
+                           <p className="font-bold text-[#0d1b12] text-sm md:text-lg leading-none">{property.rooms}</p>
                         </div>
                      </div>
                   )}
@@ -402,7 +589,7 @@ const PropertyDetails: React.FC = () => {
             </div>
 
             {/* Description */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
+            <div className="bg-white p-4 md:p-6 lg:p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
                <h3 className="text-xl font-bold text-[#0d1b12] mb-4">Описание на имота</h3>
                <div className="prose max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
                   <p>{property.description}</p>
@@ -410,13 +597,13 @@ const PropertyDetails: React.FC = () => {
             </div>
 
             {/* Amenities */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
+            <div className="bg-white p-4 md:p-6 lg:p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
                <h3 className="text-xl font-bold text-[#0d1b12] mb-6">Удобства и особености</h3>
-               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
+               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
                   {property.features.map(am => (
                     <div key={am} className="flex items-center gap-3 group">
                        <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform filled">check_circle</span>
-                       <span className="text-gray-700 font-medium">{am}</span>
+                       <span className="text-gray-700 text-xs md:text-base font-medium">{am}</span>
                     </div>
                   ))}
                   {property.features.length === 0 && <p className="text-gray-500 italic">Няма въведени специфични удобства за този имот.</p>}
@@ -424,7 +611,7 @@ const PropertyDetails: React.FC = () => {
             </div>
 
             {/* Map */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
+            <div className="bg-white p-4 md:p-6 lg:p-8 rounded-2xl shadow-sm border border-[#e7f3eb]">
               <h3 className="text-xl font-bold text-[#0d1b12] mb-4">Локация</h3>
               <div className="relative w-full h-[350px] rounded-xl overflow-hidden border border-gray-100">
                  <iframe 
@@ -460,7 +647,7 @@ const PropertyDetails: React.FC = () => {
              <div className="lg:sticky lg:top-24 flex flex-col gap-6">
                 {/* Agent Card */}
                 <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-[#e7f3eb] overflow-hidden">
-                   <div className="p-6 bg-gradient-to-br from-[#f8fcf9] to-white border-b border-gray-100">
+                   <div className="p-4 md:p-6 lg:p-6 bg-gradient-to-br from-secondary-light to-white border-b border-gray-100">
                       <div className="flex items-center gap-4 mb-5">
                          <div className="size-16 rounded-full overflow-hidden border-2 border-white shadow-md ring-2 ring-green-50">
                            <img alt={displayBroker.name} className="w-full h-full object-cover" src={displayBroker.image} />

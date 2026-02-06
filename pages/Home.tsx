@@ -275,7 +275,7 @@ const Home: React.FC = () => {
         
         <div className="relative z-10 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
-              <h1 className="text-white text-4xl md:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">Открийте своя мечтан дом</h1>
+              <h1 className="hidden sm:block text-white text-4xl md:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">Открийте своя мечтан дом</h1>
               {/*<p className="text-white/90 text-lg md:text-xl font-medium max-w-2xl mx-auto drop-shadow-md">Вашият надежден партньор в света на недвижимите имоти. Най-добрите оферти на пазара.</p>
               <p className="text-white/90 text-lg md:text-xl font-medium max-w-2xl mx-auto drop-shadow-md">Вашият надежден партньор в света на недвижимите имоти. Най-добрите оферти на пазара.</p> */}
            </div>
@@ -383,7 +383,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Recommended Properties */}
-      <section className="py-16 bg-[#f8fcf9]">
+      <section className="py-10 bg-secondary-light">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-end mb-8">
                <div>
@@ -395,44 +395,44 @@ const Home: React.FC = () => {
                </Link>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2">
                {recommendedProperties.map((prop) => (
                   <Link to={`/properties/${prop.id}`} key={prop.id} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group block">
-                     <div className="relative h-64 overflow-hidden">
-                        <img src={prop.image} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                     <div className="relative h-auto lg:h-64 overflow-hidden">
+                        <img src={prop.image} alt={prop.title} className="w-auto lg:w-full h-auto lg:h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute top-4 left-4">
-                           <span className={`px-3 py-1 rounded-md text-xs font-bold uppercase text-white shadow-sm ${prop.type === 'sale' ? 'bg-primary' : 'bg-blue-500'}`}>
+                           <span className={`hidden lg:block px-3 py-1 rounded-md text-xs font-bold uppercase text-white shadow-sm ${prop.type === 'sale' ? 'bg-primary' : 'bg-blue-500'}`}>
                               {prop.type === 'sale' ? 'Продажба' : 'Наем'}
                            </span>
                         </div>
                      </div>
-                     <div className="p-6">
-                        <h3 className="text-2xl font-black text-primary mb-2">{prop.currency === '€' ? `€ ${prop.price.toLocaleString()}` : `${prop.currency.split(' ')[0]} ${prop.price} / мес.`}</h3>
-                        <h4 className="text-lg font-bold text-[#0d1b12] mb-1 line-clamp-1">{prop.title}</h4>
+                     <div className="p-2 lg:p-6">
+                        <h3 className="text-lg lg:text-2xl font-black text-primary mb-2">{prop.currency === '€' ? `€ ${prop.price.toLocaleString()}` : `${prop.currency.split(' ')[0]} ${prop.price} / мес.`}</h3>
+                        <h4 className="text-md font-bold text-[#0d1b12] mb-1 line-clamp-1">{prop.title}</h4>
                         <div className="flex items-center gap-1 text-gray-500 text-sm mb-4">
-                           <span className="material-symbols-outlined text-[16px]">location_on</span>
+                           <span className="material-symbols-outlined text-sm lg:text-[16px]">location_on</span>
                            {prop.location}
                         </div>
-                        <div className="grid grid-cols-4 gap-2 pt-4 border-t border-gray-100">
+                        <div className="grid grid-cols-4 gap-2 pt-2 lg:pt-4 border-t border-gray-100">
                            {/* Total Rooms */}
                            <div className="flex flex-col items-center justify-center text-center">
                               <span className="material-symbols-outlined text-[18px] text-gray-400 mb-1" title="Общо стаи">meeting_room</span>
-                              <span className="text-sm font-bold text-[#0d1b12]">{prop.rooms || (prop.beds ? prop.beds + 1 : '-')}</span>
+                              <span className="text-xs lg:text-sm font-bold text-[#0d1b12]">{prop.rooms || (prop.beds ? prop.beds + 1 : '-')}</span>
                            </div>
                            {/* Bedrooms */}
                            <div className="flex flex-col items-center justify-center text-center">
                               <span className="material-symbols-outlined text-[18px] text-gray-400 mb-1" title="Спални">bed</span>
-                              <span className="text-sm font-bold text-[#0d1b12]">{prop.beds || '-'}</span>
+                              <span className="text-xs lg:text-sm font-bold text-[#0d1b12]">{prop.beds || '-'}</span>
                            </div>
                            {/* Floor */}
                            <div className="flex flex-col items-center justify-center text-center">
                               <span className="material-symbols-outlined text-[18px] text-gray-400 mb-1" title="Етаж">layers</span>
-                              <span className="text-sm font-bold text-[#0d1b12]">{prop.floor ? prop.floor.split(' ')[0] : '-'}</span>
+                              <span className="text-xs lg:text-sm font-bold text-[#0d1b12]">{prop.floor ? prop.floor.split(' ')[0] : '-'}</span>
                            </div>
                            {/* Area */}
                            <div className="flex flex-col items-center justify-center text-center">
                               <span className="material-symbols-outlined text-[18px] text-gray-400 mb-1" title="Площ">square_foot</span>
-                              <span className="text-sm font-bold text-[#0d1b12]">{prop.area} m²</span>
+                              <span className="text-[9px] lg:text-sm font-bold text-[#0d1b12]">{prop.area} m²</span>
                            </div>
                         </div>
                      </div>
@@ -453,7 +453,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Latest Additions */}
-      <section className="py-16 bg-white">
+      <section className="py-10 bg-white">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-end mb-8">
                <div>
@@ -465,11 +465,11 @@ const Home: React.FC = () => {
                </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
                {latestProperties.map((prop) => (
                   <Link to={`/properties/${prop.id}`} key={prop.id} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 group block">
-                     <div className="relative h-48 overflow-hidden">
-                        <img src={prop.image} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                     <div className="relative h-auto lg:h-48 overflow-hidden">
+                        <img src={prop.image} alt={prop.title} className="w-auto lg:w-full h-auto lg:h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                      </div>
                      <div className="p-4">
                         <h3 className="text-lg font-black text-primary mb-1">{prop.currency === '€' ? `€ ${prop.price.toLocaleString()}` : `${prop.currency.split(' ')[0]} ${prop.price} / мес.`}</h3>

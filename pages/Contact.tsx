@@ -71,9 +71,9 @@ const Contact: React.FC = () => {
             </div>
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-16">
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-16">
             {/* Left Column */}
-            <div className="lg:col-span-5 flex flex-col gap-10">
+            <div className="lg:col-span-5 flex flex-col gap-4">
                <div className="flex flex-col gap-6">
                   <h3 className="text-xl font-bold text-text-main border-l-4 border-primary pl-3">Нашите координати</h3>
                   <div className="grid gap-4">

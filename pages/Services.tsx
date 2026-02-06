@@ -53,7 +53,7 @@ const Services: React.FC = () => {
       </section>
 
       {/* Pricing & Clarity Section */}
-      <section className="py-16 bg-[#f8fcf9] border-y border-[#e7f3eb]">
+      <section className="py-16 bg-background-light border-y border-[#e7f3eb]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <div className="text-center mb-12">
              <h2 className="text-3xl font-black text-text-main mb-4">Прозрачни цени и условия</h2>

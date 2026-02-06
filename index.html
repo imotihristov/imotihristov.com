@@ -16,7 +16,10 @@
             colors: {
               "primary": "#00b42c",
               "primary-hover": "#009023",
-              "background-light": "#f8fcf9",
+              //"background-light": "#f8fcf9",
+              "secondary-light": "#f9f9f9",
+              "background-light": "#f9f9f9",
+              "background-green": "#eef7f2",
               "background-dark": "#102216",
               "text-main": "#0d1b12",
               "text-secondary": "#4c9a66",
@@ -35,6 +38,14 @@
       }
       .filled {
         font-variation-settings: 'FILL' 1;
+      }
+      /* Hide scrollbar but keep functionality */
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
     </style>
   <script type="importmap">
